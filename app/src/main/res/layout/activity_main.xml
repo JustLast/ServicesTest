@@ -52,4 +52,11 @@
         android:layout_height="wrap_content"
         android:text="work manager" />
 
+    <Button
+        android:id="@+id/stop_service"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@android:color/holo_green_light"
+        android:text="stop service" />
+
 </androidx.appcompat.widget.LinearLayoutCompat>
