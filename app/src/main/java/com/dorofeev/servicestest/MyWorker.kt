@@ -17,8 +17,7 @@ class MyWorker(
             return OneTimeWorkRequestBuilder<MyWorker>().apply {
                 setInputData(workDataOf(PAGE to page))
                 setConstraints(makeConstraints())
-            }
-                .build()
+            }.build()
         }
 
         private fun makeConstraints(): Constraints {
