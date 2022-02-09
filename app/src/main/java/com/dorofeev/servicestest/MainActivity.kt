@@ -3,11 +3,17 @@ package com.dorofeev.servicestest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.app.job.JobWorkItem
+import android.content.ComponentName
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.work.ExistingWorkPolicy
+import androidx.work.WorkManager
 import com.dorofeev.servicestest.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -15,6 +21,8 @@ class MainActivity : AppCompatActivity() {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
+
+    private var page = 0
 
     companion object {
         private const val CHANNEL_ID = "channel_id"
@@ -37,6 +45,49 @@ class MainActivity : AppCompatActivity() {
         binding.intentService.setOnClickListener {
             ContextCompat.startForegroundService(
                 this, MyIntentService.newIntent(this)
+            )
+        }
+        // This is for running an enqueue of job services
+        binding.jobScheduler.setOnClickListener {
+            val componentName = ComponentName(this, MyJobService::class.java)
+            val jobInfo = JobInfo.Builder(MyJobService.JOB_SERVICE_ID, componentName)
+                .setRequiresCharging(true)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                .build()
+            val jobScheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val intent= MyJobService.newIntent(page++)
+                jobScheduler.enqueue(jobInfo, JobWorkItem(intent))
+            } else {
+                val intent = MyIntentService2.newIntent(this, page++)
+                startService(intent)
+            }
+        }
+
+        // This is for a one-time launch a job service (without enqueue)
+//        binding.jobScheduler.setOnClickListener {
+//            val componentName = ComponentName(this, MyJobService::class.java)
+//            val jobInfo = JobInfo.Builder(MyJobService.JOB_SERVICE_ID, componentName)
+//                .setExtras(MyJobService.newBundle(page++))
+//                .setRequiresCharging(true)
+//                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+//                .setPersisted(true)
+//                .build()
+//            val jobScheduler = getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+//            jobScheduler.schedule(jobInfo)
+//        }
+
+        binding.jobIntentService.setOnClickListener {
+            MyJobIntentService.enqueue(this, page++)
+        }
+
+        binding.workManager.setOnClickListener {
+            val workManager = WorkManager.getInstance(applicationContext)
+            workManager.enqueueUniqueWork(
+                MyWorker.WORK_NAME,
+                ExistingWorkPolicy.APPEND,
+                MyWorker.makeRequest(page++)
             )
         }
 
